@@ -16,6 +16,7 @@ namespace rasdialsvc
         public string rasEntry { get; set; }
         public int pingPeriodMs { get; set; }
         public int waitDialMs { get; set; }
+        public int waitDisconnectMs { get; set; }
 
         public static Settings Read()
         {
@@ -43,11 +44,14 @@ namespace rasdialsvc
                     PingReply reply = pingSender.Send(settings.pingHost, 120);
                     if (reply.Status != IPStatus.Success)
                     {
-                        Console.WriteLine($"rasdial {settings.rasEntry}");
-                        System.Diagnostics.Process.Start("rasdial.exe", settings.rasEntry);
-                        m_exit.WaitOne(settings.waitDialMs);
+                        System.Diagnostics.Process.Start("rasdial.exe", settings.rasEntry + " /DISCONNECT");
+                        if (!m_exit.WaitOne(settings.waitDisconnectMs))
+                        {
+                            System.Diagnostics.Process.Start("rasdial.exe", settings.rasEntry);
+                            m_exit.WaitOne(settings.waitDialMs);
+                        }
                     }
-                    settings = Settings.Read();
+                    // settings = Settings.Read();
                 }
                 while (!m_exit.WaitOne(settings.pingPeriodMs));
             }
