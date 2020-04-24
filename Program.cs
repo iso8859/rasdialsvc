@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RunProcessAsTask;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -41,16 +42,22 @@ namespace rasdialsvc
                 do
                 {
                     Ping pingSender = new Ping();
-                    PingReply reply = pingSender.Send(settings.pingHost, 120);
+                    PingReply reply = pingSender.Send(settings.pingHost, 1000);
                     if (reply.Status != IPStatus.Success)
                     {
-                        System.Diagnostics.Process.Start("rasdial.exe", settings.rasEntry + " /DISCONNECT");
-                        if (!m_exit.WaitOne(settings.waitDisconnectMs))
+                        CancellationTokenSource c = new CancellationTokenSource();
+                        var task = Task.Run(async () => { return await ProcessEx.RunAsync("rasdial.exe", settings.rasEntry + " /DISCONNECT", c.Token); });
+                        if (Task.WaitAny(new Task[] { task }, settings.waitDisconnectMs) != -1) // Timeout
                         {
-                            System.Diagnostics.Process.Start("rasdial.exe", settings.rasEntry);
-                            m_exit.WaitOne(settings.waitDialMs);
+                            task = Task.Run(async () => { return await ProcessEx.RunAsync("rasdial.exe", settings.rasEntry, c.Token); });
+                            if (Task.WaitAny(new Task[] { task }, settings.waitDialMs) == -1) // Timeout
+                                c.Cancel(); // Kill rasdial
                         }
+                        else
+                            c.Cancel(); // Kill rasdial /DISCONNECT
                     }
+                    //else
+                    //    Console.WriteLine(reply.RoundtripTime);
                     // settings = Settings.Read();
                 }
                 while (!m_exit.WaitOne(settings.pingPeriodMs));

@@ -2,6 +2,6 @@
   "pingHost": "192.168.99.10",
   "rasEntry": "vpn.m4f.eu",
   "pingPeriodMs": 5000,
-  "waitDialMs": 1000,
-  "waitDisconnectMs": 1000
+  "waitDialMs": 5000,
+  "waitDisconnectMs": 5000
 }

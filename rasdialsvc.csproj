@@ -47,6 +47,9 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RunProcessAsTask\ProcessEx.cs" />
+    <Compile Include="RunProcessAsTask\ProcessEx.overloads.cs" />
+    <Compile Include="RunProcessAsTask\ProcessResults.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
